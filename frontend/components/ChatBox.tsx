@@ -1,5 +1,6 @@
 // ChatBox.tsx
-// A tiny, beginner-friendly chat screen in React Native + TypeScript.
+// This is the main chat screen. It shows chat history, lets users send messages, and displays the online user count.
+// It saves and loads messages from Supabase, and calls the backend to get AI replies.
 
 import React, { useState, useRef, useEffect } from "react";
 import {
@@ -13,12 +14,10 @@ import {
   Platform,
 } from "react-native";
 
-// *****************************************
-// Helper to call backend API
+// Helper function to call the backend API and get a Gemini reply
 async function fetchGeminiReply(prompt: string): Promise<{ reply: string }> {
-  // Use port 3000 (backend default)
-    // Use your computer's LAN IP so mobile devices/emulators can reach it
-  const url = "http://69.88.184.236:3000/api/chat"; // <-- replace with your actual IP if different
+  // The backend URL (change to your computer's LAN IP if needed)
+  const url = "http://69.88.184.236:3000/api/chat";
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -29,9 +28,8 @@ async function fetchGeminiReply(prompt: string): Promise<{ reply: string }> {
   }
   return await res.json();
 }
-// *****************************************
 
-// 1) Define what a "message" looks like, so TypeScript can help us.
+// Type for a chat message (either from user or bot)
 type Message = {
   text: string;
   from: "user" | "bot";
@@ -45,11 +43,11 @@ type ChatBoxProps = {
 };
 
 const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
-  // Online user count state
+  // State for online user count and any online status errors
   const [onlineCount, setOnlineCount] = useState<number>(1);
   const [onlineError, setOnlineError] = useState<string | null>(null);
-  // Helper: update this user's online status
 
+  // Update this user's online status in Supabase
   async function updateOnlineStatus() {
     const { error } = await supabase.from('online_users').upsert({
       user_id: userId,
@@ -63,7 +61,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
     }
   }
 
-  // Helper: remove this user's online status
+  // Remove this user's online status (when leaving)
   async function removeOnlineStatus() {
     const { error } = await supabase.from('online_users').delete().eq('user_id', userId);
     if (error) {
@@ -71,7 +69,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
     }
   }
 
-  // Helper: fetch online user count (last_seen within 60s)
+  // Fetch the number of users online (seen in last 60 seconds)
   async function fetchOnlineCount() {
     const { count, error } = await supabase
       .from('online_users')
@@ -84,7 +82,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
     setOnlineCount(count || 1);
   }
 
-  // On mount: start interval to update online status and fetch count
+  // On mount: update online status and start interval to refresh it
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (userId) {
@@ -101,16 +99,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
     };
     // eslint-disable-next-line
   }, [userId]);
-  // 2) Screen "memory" (state):
-  // - input: what's currently typed into the box
-  // - messages: the whole chat history we render on screen
-  // - loading: are we waiting on a bot reply?
+
+  // State for chat input, messages, and loading spinner
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Load chat history for this user on mount
+  // Load chat history for this user from Supabase on mount
   useEffect(() => {
     async function loadHistory() {
       const { data, error } = await supabase
@@ -135,7 +131,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
     ]);
   }
 
-  // 3) When the user presses "Send"
+  // When the user presses "Send"
   const handleSend = async () => {
     const text = input.trim();
     if (!text) return;
@@ -164,6 +160,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
     }
   }, [messages, loading]);
 
+  // Render the chat UI
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: '#e6e9f5' }}
@@ -171,7 +168,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
       keyboardVerticalOffset={Platform.OS === "ios" ? 48 : 0}
     >
       <View style={styles.screen}>
-        {/* Header with sign out */}
+        {/* Header with sign out and online user count */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>CSSECGPT</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -248,7 +245,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
 
 export default ChatBox;
 
-/* 7) Styles: kept tiny and readable. */
+// Styles for the chat UI
 const styles = StyleSheet.create({
   screen: {
     flex: 1,

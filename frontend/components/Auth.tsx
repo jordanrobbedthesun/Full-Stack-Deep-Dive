@@ -1,13 +1,19 @@
+// Auth.tsx
+// This component provides the login and signup UI for the app.
+// It uses Supabase Auth to handle user authentication with email and password.
+
 import React, { useState } from 'react'
 import { Alert, StyleSheet, View } from 'react-native'
 import { supabase } from '../lib/supabase'
 import { Button, Input } from '@rneui/themed'
 
 export default function Auth() {
+     // State for email, password, and loading spinner
      const [email, setEmail] = useState('')
      const [password, setPassword] = useState('')
      const [loading, setLoading] = useState(false)
 
+     // Called when user presses "Sign in"
      async function signInWithEmail() {
           setLoading(true)
           const { error } = await supabase.auth.signInWithPassword({
@@ -19,6 +25,7 @@ export default function Auth() {
           setLoading(false)
      }
 
+     // Called when user presses "Sign up"
      async function signUpWithEmail() {
           setLoading(true)
           const {
@@ -30,10 +37,11 @@ export default function Auth() {
           })
 
           if (error) Alert.alert(error.message)
-          // if (!session) Alert.alert('Please check your inbox for email verification!')
+          // If you want, you can alert the user to check their email for verification
           setLoading(false)
      }
 
+     // Renders the login/signup form
      return (
           <View style={styles.container}>
                <View style={[styles.verticallySpaced, styles.mt20]}>
@@ -67,6 +75,7 @@ export default function Auth() {
      )
 }
 
+// Styles for the Auth screen
 const styles = StyleSheet.create({
      container: {
           marginTop: 40,

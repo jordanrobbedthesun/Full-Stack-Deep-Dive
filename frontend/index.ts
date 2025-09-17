@@ -1,8 +1,10 @@
-import { registerRootComponent } from 'expo';
 
+// index.ts
+// This is the entry point for the Expo/React Native app.
+// It registers the main App component so the app can run on iOS, Android, or web.
+
+import { registerRootComponent } from 'expo';
 import App from './App';
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
+// This ensures the app is set up correctly for all platforms
 registerRootComponent(App);
