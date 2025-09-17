@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto'
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import Auth from './components/Auth'
-import Home from './components/Home'
+import ChatBox from './components/ChatBox'
 import { View } from 'react-native'
 import { Session } from '@supabase/supabase-js'
 
@@ -20,8 +20,12 @@ export default function App() {
   }, [])
 
   return (
-    <View>
-      {!session ? <Auth /> : <Home userId={session.user?.id ?? ''} />}
+    <View style={{ flex: 1 }}>
+      {!session ? (
+        <Auth />
+      ) : (
+        <ChatBox userId={session.user.id} onSignOut={() => supabase.auth.signOut()} />
+      )}
     </View>
   )
 }
