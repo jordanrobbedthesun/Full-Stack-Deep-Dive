@@ -156,7 +156,7 @@ A: Yes, as long as you use RLS in Supabase and never expose your service role or
 - Make sure backend is accessible to your device (use your computer's LAN IP if testing on a real device).
 -
 #### Customizing the Chatbot (System Instructions)
-- The backend `/api/chat` endpoint accepts an optional `system_message` in the POST body. This lets you control the chatbot's persona or expertise.
+- The backend `/api/chat` endpoint has a `system_message` variable in the POST body. This lets you control the chatbot's persona or expertise.
 - **Example request:**
 	```json
 	{
@@ -164,7 +164,6 @@ A: Yes, as long as you use RLS in Supabase and never expose your service role or
 	  "system_message": "You are a CSSEC tutor. Answer clearly and concisely."
 	}
 	```
-- If you do not provide a `system_message`, the default is "You are a helpful assistant.".
 
 ### 3. Frontend
 - In `frontend/`, install dependencies:
