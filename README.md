@@ -1,13 +1,15 @@
 # Full-Stack AI Chatbot App
 
 ## Overview
-A cross-platform mobile chat app where users can securely log in, chat with an AI (Google Gemini), and have their chat history saved and loaded per user. Built with React Native, Supabase, and Node.js/Express.
+A cross-platform mobile chat app where users can securely log in, chat with a custom AI (CSSEC Chatbot powered by Google Gemini), and have their chat history saved and loaded per user. Built with React Native, Supabase, and Node.js/Express.
+The backend allows you to set custom system instructions, so you can tailor the chatbot's personality, expertise, or behavior for your use case (e.g., CSSEC tutor, travel bot, etc).
 
 ---
 
+
 ## Features
 - **User Authentication:** Secure sign up and login using Supabase Auth ([setup followed this guide](https://supabase.com/docs/guides/auth/quickstarts/react-native)).
-- **AI Chatbot:** Chat with Google Gemini via a secure backend.
+- **Custom CSSEC Chatbot:** Chat with a Gemini-powered AI whose behavior can be customized via system instructions (e.g., "You are a CSSEC tutor.").
 - **Chat History:** All messages are saved and loaded per user from Supabase.
 - **Sign Out:** Users can log out and return to the login screen.
 
@@ -23,6 +25,7 @@ A cross-platform mobile chat app where users can securely log in, chat with an A
 ### Backend
 - **Node.js + Express:** Handles AI chat endpoint and keeps Gemini API key secret.
 - **@google/generative-ai:** Connects to Google Gemini API.
+- **Custom System Instructions:** The backend lets you set a system message for the chatbot, so you can control its role (e.g., "You are a helpful CSSEC tutor.").
 - **dotenv:** Loads environment variables (API keys, etc.).
 - **CORS:** Allows mobile app to call backend from different origins.
 
@@ -40,7 +43,7 @@ A cross-platform mobile chat app where users can securely log in, chat with an A
 2. The app loads their previous chat messages from Supabase.
 3. User types a message and hits send.
 4. The message is saved to Supabase and also sent to the backend.
-5. The backend asks Gemini for a reply.
+5. The backend asks Gemini for a reply, using your custom system instruction (if provided).
 6. The reply is sent back to the app, shown to the user, and saved to Supabase.
 7. User can sign out, which returns them to the login screen.
 
@@ -142,7 +145,8 @@ A: Yes! This project works with Expo or plain React Native CLI.
 **Q: Is this secure?**
 A: Yes, as long as you use RLS in Supabase and never expose your service role or Gemini API keys in the frontend.
 
-### 2. Backend
+
+### 2. Backend (Custom CSSEC Chatbot)
 - In `backend/`, copy `.env.example` to `.env` and add your Gemini API key.
 - Install dependencies:
 	```sh
@@ -150,6 +154,17 @@ A: Yes, as long as you use RLS in Supabase and never expose your service role or
 	npm start
 	```
 - Make sure backend is accessible to your device (use your computer's LAN IP if testing on a real device).
+-
+#### Customizing the Chatbot (System Instructions)
+- The backend `/api/chat` endpoint accepts an optional `system_message` in the POST body. This lets you control the chatbot's persona or expertise.
+- **Example request:**
+	```json
+	{
+	  "prompt": "What is a database index?",
+	  "system_message": "You are a CSSEC tutor. Answer clearly and concisely."
+	}
+	```
+- If you do not provide a `system_message`, the default is "You are a helpful assistant.".
 
 ### 3. Frontend
 - In `frontend/`, install dependencies:
@@ -169,10 +184,11 @@ A: Yes, as long as you use RLS in Supabase and never expose your service role or
 
 ---
 
+
 ## Detailed Summary
 
-- **Frontend:** Handles all user interaction, login, and chat display. Talks directly to Supabase for auth and chat history. Sends chat prompts to backend for AI replies.
-- **Backend:** Only used for AI chat, keeps Gemini API key secret, and returns AI replies to the app.
+- **Frontend:** Handles all user interaction, login, and chat display. Talks directly to Supabase for auth and chat history. Sends chat prompts (and optional system instructions) to backend for AI replies.
+- **Backend:** Only used for AI chat, keeps Gemini API key secret, and returns AI replies to the app. Lets you set custom system instructions for the chatbot's role or expertise.
 - **Supabase:** Handles all user accounts and chat storage, securely and easily. Users can only access their own data.
 
 This setup is modern, secure, and scalable—used by many real-world apps!
