@@ -94,6 +94,54 @@ backend/
 	```
 - Enable Row Level Security (RLS) for the `chats` table.
 
+#### Online User Counter (Public)
+
+- Create an `online_users` table:
+	```sql
+	create table online_users (
+		user_id uuid primary key references auth.users(id) on delete cascade,
+		last_seen timestamp with time zone not null default timezone('utc', now())
+	);
+	-- Enable Row Level Security
+	alter table online_users enable row level security;
+	-- Policy: Users can insert/update/delete their own row
+	create policy "Users can manage their own online status"
+		on online_users
+		for all
+		using (auth.uid() = user_id);
+	-- Policy: Allow all users to select (read) online_users
+	create policy "Allow all users to read online users"
+		on online_users
+		for select
+		using (true);
+	```
+	This allows the app to show a public count of users online in real time.
+# FAQ (Beginner Friendly)
+
+**Q: Why does the app use Supabase directly from the frontend?**
+A: Supabase is designed to be used from the client (like Firebase). It’s secure because of Row Level Security (RLS) and only exposes a public key. The backend is only needed for things that require secrets (like the Gemini API key).
+
+**Q: Why do I need a backend at all?**
+A: The backend is only for the AI chat endpoint. It keeps your Gemini API key secret and talks to Gemini for you. All other data (auth, chat history, online users) is handled by Supabase directly from the app.
+
+**Q: Why does the online user counter only show 1 user?**
+A: By default, Supabase RLS only lets users see their own rows. You must add a policy to allow all users to SELECT from `online_users` (see above) so everyone can see the count.
+
+**Q: How do I test on a real device?**
+A: Use your computer’s LAN IP address (not localhost) for the backend URL in `ChatBox.tsx`. Make sure your phone and computer are on the same Wi-Fi network.
+
+**Q: Where do I put my Gemini API key?**
+A: In the backend’s `.env` file. Never put it in the frontend or commit it to git.
+
+**Q: How do I clear chat history?**
+A: You can add a button in the app to delete rows from the `chats` table for the current user, or clear the table in Supabase directly.
+
+**Q: Can I use this with Expo?**
+A: Yes! This project works with Expo or plain React Native CLI.
+
+**Q: Is this secure?**
+A: Yes, as long as you use RLS in Supabase and never expose your service role or Gemini API keys in the frontend.
+
 ### 2. Backend
 - In `backend/`, copy `.env.example` to `.env` and add your Gemini API key.
 - Install dependencies:

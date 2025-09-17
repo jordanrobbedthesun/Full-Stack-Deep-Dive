@@ -18,7 +18,7 @@ import {
 async function fetchGeminiReply(prompt: string): Promise<{ reply: string }> {
   // Use port 3000 (backend default)
     // Use your computer's LAN IP so mobile devices/emulators can reach it
-  const url = "http://10.100.93.59:3000/api/chat"; // <-- replace with your actual IP if different
+  const url = "http://69.88.184.236:3000/api/chat"; // <-- replace with your actual IP if different
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -45,6 +45,62 @@ type ChatBoxProps = {
 };
 
 const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
+  // Online user count state
+  const [onlineCount, setOnlineCount] = useState<number>(1);
+  const [onlineError, setOnlineError] = useState<string | null>(null);
+  // Helper: update this user's online status
+
+  async function updateOnlineStatus() {
+    const { error } = await supabase.from('online_users').upsert({
+      user_id: userId,
+      last_seen: new Date().toISOString(),
+    });
+    if (error) {
+      setOnlineError('Online status error: ' + error.message);
+      console.warn('Supabase online_users upsert error:', error);
+    } else {
+      setOnlineError(null);
+    }
+  }
+
+  // Helper: remove this user's online status
+  async function removeOnlineStatus() {
+    const { error } = await supabase.from('online_users').delete().eq('user_id', userId);
+    if (error) {
+      console.warn('Supabase online_users delete error:', error);
+    }
+  }
+
+  // Helper: fetch online user count (last_seen within 60s)
+  async function fetchOnlineCount() {
+    const { count, error } = await supabase
+      .from('online_users')
+      .select('user_id', { count: 'exact' })
+      .gte('last_seen', new Date(Date.now() - 60000).toISOString());
+    if (error) {
+      setOnlineError('Online count error: ' + error.message);
+      console.warn('Supabase online_users count error:', error);
+    }
+    setOnlineCount(count || 1);
+  }
+
+  // On mount: start interval to update online status and fetch count
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (userId) {
+      updateOnlineStatus();
+      fetchOnlineCount();
+      interval = setInterval(() => {
+        updateOnlineStatus();
+        fetchOnlineCount();
+      }, 30000); // every 30s
+    }
+    return () => {
+      clearInterval(interval);
+      removeOnlineStatus();
+    };
+    // eslint-disable-next-line
+  }, [userId]);
   // 2) Screen "memory" (state):
   // - input: what's currently typed into the box
   // - messages: the whole chat history we render on screen
@@ -118,12 +174,22 @@ const ChatBox: React.FC<ChatBoxProps> = ({ userId, onSignOut }) => {
         {/* Header with sign out */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>CSSECGPT</Text>
-          {onSignOut && (
-            <TouchableOpacity style={styles.signOutBtn} onPress={onSignOut}>
-              <Text style={styles.signOutText}>Sign Out</Text>
-            </TouchableOpacity>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.onlineCount}>
+              {onlineCount} online
+            </Text>
+            {onSignOut && (
+              <TouchableOpacity style={styles.signOutBtn} onPress={onSignOut}>
+                <Text style={styles.signOutText}>Sign Out</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
+        {onlineError && (
+          <Text style={{ color: 'red', textAlign: 'center', marginTop: 4, fontSize: 13 }}>
+            {onlineError}
+          </Text>
+        )}
 
         {/* Chat area with card look */}
         <View style={styles.chatCard}>
@@ -211,6 +277,16 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  onlineCount: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    marginRight: 16,
+    backgroundColor: '#6f5cff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   signOutBtn: {
     backgroundColor: '#fff',
