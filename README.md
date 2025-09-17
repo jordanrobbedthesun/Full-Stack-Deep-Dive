@@ -5,8 +5,26 @@ A cross-platform mobile chat app where users can securely log in, chat with a cu
 The backend allows you to set custom system instructions, so you can tailor the chatbot's personality, expertise, or behavior for your use case (e.g., CSSEC tutor, travel bot, etc).
 
 ---
+---
 
+## How Each Code File Works
 
+### Frontend
+
+- **App.tsx**: The entry point for the app. Handles session state. If the user is not logged in, it shows the Auth screen. If logged in, it shows the ChatBox.
+- **components/Auth.tsx**: Provides the login and signup UI. Uses Supabase Auth to sign in or register users with email and password.
+- **components/ChatBox.tsx**: The main chat interface. Loads and displays chat history for the logged-in user, shows the online user count, and lets users send messages to the AI. Handles saving/loading messages to/from Supabase and calls the backend for AI replies.
+- **lib/supabase.ts**: Configures and exports the Supabase client for use throughout the frontend. Handles session persistence and refresh.
+
+### Backend
+
+- **server.js**: The Express server that exposes the `/api/chat` endpoint. Receives chat prompts from the frontend, adds an optional system instruction, and sends the request to the Gemini API. Returns the AI's reply to the frontend. Keeps the Gemini API key secret using environment variables.
+- **.env**: Stores sensitive backend configuration, such as the Gemini API key and server port. Not committed to version control for security.
+
+### Database (Supabase)
+
+- **chats table**: Stores all chat messages, with columns for user ID, message text, sender (user or bot), and timestamp. Each user's chat history is kept separate and secure.
+- **online_users table**: Tracks which users are currently online, so the app can display a real-time online user count. Uses Row Level Security to ensure privacy and correct access.
 ## Features
 - **User Authentication:** Secure sign up and login using Supabase Auth ([setup followed this guide](https://supabase.com/docs/guides/auth/quickstarts/react-native)).
 - **Custom CSSEC Chatbot:** Chat with a Gemini-powered AI whose behavior can be customized via system instructions (e.g., "You are a CSSEC tutor.").
@@ -202,5 +220,14 @@ This setup is modern, secure, and scalable—used by many real-world apps!
 ---
 
 ## License
-MIT
-# Full-Stack-Deep-Dive
+
+This project is licensed under the **MIT License**. This is a very permissive open-source license that allows you to:
+- Use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software
+- Use the software for private, educational, or commercial purposes
+
+**Requirements:**
+- You must include the original copyright notice and license in any copies or substantial portions of the software.
+- The software is provided "as is", without warranty of any kind.
+
+In short: You can use this code freely, even in commercial projects, as long as you give credit and don’t hold the authors liable.
+
